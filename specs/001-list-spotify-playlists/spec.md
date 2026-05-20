@@ -84,3 +84,10 @@
 - 使用 Spotify 官方 Web API 並採用 PKCE 流程（使用者會在 Spotify Developer 取得 `client_id`）。
 - 預設為純靜態前端部署（可上 GitHub Pages）；serverless 為可選項目。
 - 目標為個人/小量使用者，不須支援高併發商業用量。
+
+## Clarifications
+
+### Session 2026-05-20
+
+- Q1: 是否要在預設功能中包含「展開歌單列出曲目清單」？ → A: 僅列出歌單名稱與曲目數（Option A，優先最小範圍與快速完成 MVP）。
+
