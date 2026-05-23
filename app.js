@@ -13,6 +13,11 @@ const CLIENT_ID = '42b59981c4ac4e4d9fc0091d9cb1926b';
 // 👇 請設定您的 Redirect URI（必須與 Spotify App 設定相同）
 const REDIRECT_URI = 'https://310219-dev.github.io/-/callback.html';
 
+// 測試 Token（用於快速測試，不經過 OAuth）
+// 來自 Spotify 官方代碼示例
+const TEST_TOKEN = 'BQC3p-feCen7Pi51h__0EIB1a1A0RjPIsM02QLXLHbvFX7AuGemnsZGVDwoM-me3Y2xqhY7Xe6N2ehSglK_9-MxiNZHHuZVwS2KS1F5GTwbbf3BvkIBXSK1utNh1HVnBgd72dOTMTSG8f1tnglAI7qv3YZBJ68RnWpEuUzqPVoWm9CYn-z5q3vW5-_5X9tANfyWhbPC98gSi-CdS11ZKHJJoHcIBnZ8wHehwBMPNF2cSsA7RlQbgpAT60zCmXzO5u7i87DVY6ma2QwGVBLi9_KF6giUG5HSpDkIVWIvNZykFdWk3OfnJk55jl-P6SHObimTFLYzT_w';
+const USE_TEST_TOKEN = true; // 設為 true 來測試官方 token
+
 // Spotify OAuth endpoints
 const SPOTIFY_AUTH_ENDPOINT = 'https://accounts.spotify.com/authorize';
 const SPOTIFY_API_TOKEN_ENDPOINT = 'https://accounts.spotify.com/api/token';
@@ -450,6 +455,44 @@ document.addEventListener('DOMContentLoaded', async () => {
     const playlistContainer = document.getElementById('playlistContainer');
     const playlistList = document.getElementById('playlistList');
     const userDisplay = document.getElementById('userDisplay');
+
+    // 【測試模式】如果啟用測試 Token，直接跳過 OAuth
+    if (USE_TEST_TOKEN) {
+        console.log('[TEST MODE] 使用官方提供的 access token 進行測試');
+        const accessToken = TEST_TOKEN;
+        currentAccessToken = accessToken;
+        playlistContainer.style.display = 'block';
+        playlistList.textContent = '載入中...';
+
+        try {
+            // 取得使用者信息
+            const user = await fetchUserProfile(accessToken);
+            userDisplay.textContent = user.display_name || user.email;
+
+            // 取得所有歌單
+            playlistList.textContent = '載入歌單中...';
+            const playlists = await fetchAllPlaylists(accessToken);
+            currentPlaylists = playlists;
+
+            // 顯示交互式歌單列表
+            await displayPlaylists(accessToken, playlists);
+            
+            // 在測試模式顯示提示
+            const testModeNotice = document.createElement('div');
+            testModeNotice.style.padding = '10px 20px';
+            testModeNotice.style.background = '#fff3cd';
+            testModeNotice.style.color = '#856404';
+            testModeNotice.style.borderRadius = '4px';
+            testModeNotice.style.marginTop = '10px';
+            testModeNotice.textContent = '⚠️ 測試模式：使用官方 token 進行診斷';
+            playlistContainer.appendChild(testModeNotice);
+        } catch (error) {
+            showError(`❌ 載入失敗: ${error.message}`);
+        }
+
+        loginBtn.addEventListener('click', startOAuthFlow);
+        return; // 跳過下面的 OAuth 流程
+    }
 
     // 檢查 URL 參數中是否有 error
     const urlParams = new URLSearchParams(window.location.search);
