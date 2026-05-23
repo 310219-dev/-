@@ -204,6 +204,52 @@ async function fetchAllPlaylists(accessToken) {
     return playlists;
 }
 
+/**
+ * 取得歌單的所有曲目（分頁處理）
+ */
+async function fetchPlaylistTracks(accessToken, playlistId) {
+    const tracks = [];
+    let offset = 0;
+    const limit = 50;
+    let hasMore = true;
+
+    while (hasMore) {
+        try {
+            const response = await fetch(
+                `${SPOTIFY_API_BASE}/playlists/${playlistId}/tracks?limit=${limit}&offset=${offset}`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                    },
+                }
+            );
+
+            if (response.status === 401) {
+                throw new Error('Unauthorized: Token 已過期或無效');
+            }
+
+            if (response.status === 429) {
+                throw new Error('Too Many Requests: API 限流，請稍後重試');
+            }
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            tracks.push(...data.items);
+
+            offset += limit;
+            hasMore = data.next !== null;
+        } catch (error) {
+            console.error('取得曲目失敗:', error);
+            throw error;
+        }
+    }
+
+    return tracks;
+}
+
 // ============ STATE MANAGEMENT ============
 
 let currentAccessToken = null;
