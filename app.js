@@ -219,9 +219,11 @@ function showError(message) {
  * 渲染歌單清單為文字
  */
 function renderPlaylists(playlists) {
-    const lines = playlists.map(
-        (pl) => `${pl.name} — ${pl.tracks.total} 曲`
-    );
+    const lines = playlists.map((pl) => {
+        // 處理 tracks 可能不存在或結構不同的情況
+        const totalTracks = (pl.tracks && pl.tracks.total) ? pl.tracks.total : (pl.total || 0);
+        return `${pl.name} — ${totalTracks} 首`;
+    });
     return lines.join('\n');
 }
 
