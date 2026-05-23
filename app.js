@@ -170,7 +170,7 @@ async function fetchAllPlaylists(accessToken) {
     while (hasMore) {
         try {
             const response = await fetch(
-                `${SPOTIFY_API_BASE}/me/playlists?limit=${limit}&offset=${offset}`,
+                `${SPOTIFY_API_BASE}/me/playlists?limit=${limit}&offset=${offset}&fields=id,name,tracks(total),owner`,
                 {
                     headers: {
                         'Authorization': `Bearer ${accessToken}`,
