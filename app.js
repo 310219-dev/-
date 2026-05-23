@@ -228,6 +228,10 @@ async function fetchPlaylistTracks(accessToken, playlistId) {
                 throw new Error('Unauthorized: Token 已過期或無效');
             }
 
+            if (response.status === 403) {
+                throw new Error('Forbidden: 無權限訪問此歌單（可能是協作歌單或受限歌單）');
+            }
+
             if (response.status === 429) {
                 throw new Error('Too Many Requests: API 限流，請稍後重試');
             }
@@ -381,6 +385,16 @@ async function showPlaylistTracks(accessToken, playlistId, playlistName) {
         currentPlaylistName = playlistName;
         
     } catch (error) {
+        playlistList.innerHTML = `
+            <div style="padding: 20px; text-align: center; color: #d32f2f;">
+                <div style="margin-bottom: 15px;">❌ 載入曲目失敗</div>
+                <div style="margin-bottom: 20px; font-size: 14px; color: #666;">${error.message}</div>
+                <button id="returnBtn" style="padding: 8px 20px; background: #f0f0f0; border: 1px solid #ccc; border-radius: 20px; cursor: pointer;">← 返回歌單列表</button>
+            </div>
+        `;
+        document.getElementById('returnBtn').addEventListener('click', async () => {
+            await displayPlaylists(accessToken, currentPlaylists);
+        });
         showError(`❌ 載入曲目失敗: ${error.message}`);
     }
 }
