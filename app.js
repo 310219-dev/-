@@ -191,7 +191,6 @@ async function fetchAllPlaylists(accessToken) {
             }
 
             const data = await response.json();
-            console.log(`Playlists API Response (offset ${offset}):`, data);
             playlists.push(...data.items);
 
             offset += limit;
@@ -202,7 +201,6 @@ async function fetchAllPlaylists(accessToken) {
         }
     }
 
-    console.log('All playlists:', playlists);
     return playlists;
 }
 
@@ -276,12 +274,13 @@ function showError(message) {
 }
 
 /**
- * 取得單一歌單的詳細信息（包含曲目數）
+ * 取得歌單的曲目總數（透過調用 tracks 端點）
  */
-async function fetchPlaylistDetails(accessToken, playlistId) {
+async function getPlaylistTrackCount(accessToken, playlistId) {
     try {
+        // 只請求第一頁，limit=1，只是為了取得 total 字段
         const response = await fetch(
-            `${SPOTIFY_API_BASE}/playlists/${playlistId}`,
+            `${SPOTIFY_API_BASE}/playlists/${playlistId}/tracks?limit=1`,
             {
                 headers: {
                     'Authorization': `Bearer ${accessToken}`,
@@ -294,12 +293,12 @@ async function fetchPlaylistDetails(accessToken, playlistId) {
         }
 
         const data = await response.json();
-        console.log(`Playlist Details (${playlistId}):`, data);
-        console.log(`  - tracks.total: ${data.tracks?.total}`);
-        return data;
+        const total = data.total || 0;
+        console.log(`[TRACK COUNT] ${playlistId}: ${total} tracks`);
+        return total;
     } catch (error) {
-        console.error(`取得歌單詳細信息失敗 (${playlistId}):`, error);
-        return null;
+        console.error(`取得曲目數失敗 (${playlistId}):`, error);
+        return 0;
     }
 }
 
@@ -326,18 +325,8 @@ async function displayPlaylists(accessToken, playlists) {
         item.textContent = `${playlist.name} — 載入中...`;
         playlistList.appendChild(item);
         
-        // 非同步取得詳細信息
-        const details = await fetchPlaylistDetails(accessToken, playlist.id);
-        const totalTracks = (details && details.tracks && details.tracks.total) ? details.tracks.total : 0;
-        
-        // DEBUG: 在頁面顯示原始數據
-        console.log(`[DEBUG] ${playlist.name}:`, {
-            playlistId: playlist.id,
-            rawPlaylistData: playlist,
-            detailsResponse: details,
-            tracksTotal: totalTracks,
-            tracksFull: details?.tracks
-        });
+        // 非同步取得曲目總數
+        const totalTracks = await getPlaylistTrackCount(accessToken, playlist.id);
         
         // 更新顯示
         item.textContent = `${playlist.name} — ${totalTracks} 首`;
