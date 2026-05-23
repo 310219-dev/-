@@ -13,10 +13,9 @@ const CLIENT_ID = '42b59981c4ac4e4d9fc0091d9cb1926b';
 // 👇 請設定您的 Redirect URI（必須與 Spotify App 設定相同）
 const REDIRECT_URI = 'https://310219-dev.github.io/-/callback.html';
 
-// 測試 Token（用於快速測試，不經過 OAuth）
-// 來自 Spotify 官方代碼示例
-const TEST_TOKEN = 'BQDnKy0LXoHlJuYL2faIrra8xSlNxYAyYrNAB1unayLAtWFMaDUgbDogyUQP-MFiF1OPd83K8WZF2oeZnS45pMNqW73U1pZSF7lnMLhUQMthfefRobXWDOylEn03Drj0Bao43Hmx1e6wcl3PQjvI5A2v_vhDTTaR9VHXW-9zV3kUuGY8O4tL7yXk0YMTxfNEuN8ehYqcdHXFSWeLVPfeIT0s7jxn3KjkouGfwi3OtuBg-WtByvdhHsKyaCFswkoxYzc_MnDVSfCjB0ptPMUSaaxNC60oS1jY6UOA1_ty8T5-_QK0_HT9CQ7Jr3uWxQ-ucZ0kisrcow';
-const USE_TEST_TOKEN = true; // 設為 true 來測試官方 token
+// 測試 Token（已棄用 - 使用真正的 OAuth + 後端 Token 交換）
+// const TEST_TOKEN = '...';
+const USE_TEST_TOKEN = false; // 現在使用正確的 OAuth 流程 + Vercel 後端
 
 // Spotify OAuth endpoints
 const SPOTIFY_AUTH_ENDPOINT = 'https://accounts.spotify.com/authorize';
@@ -111,30 +110,35 @@ async function exchangeCodeForToken(code) {
     }
 
     try {
-        const response = await fetch(SPOTIFY_API_TOKEN_ENDPOINT, {
+        // 【新】透過 Vercel 後端函數安全地交換 Token
+        // 這樣 Client Secret 永遠不會暴露給前端
+        console.log('[TOKEN EXCHANGE] 調用後端 API 交換 token...');
+        
+        const response = await fetch('/api/token', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Type': 'application/json',
             },
-            body: new URLSearchParams({
-                client_id: CLIENT_ID,
-                grant_type: 'authorization_code',
+            body: JSON.stringify({
                 code: code,
-                redirect_uri: REDIRECT_URI,
-                code_verifier: codeVerifier,
+                redirectUri: REDIRECT_URI,
+                codeVerifier: codeVerifier,  // 【重要】PKCE 流程所需
             }),
         });
 
         if (!response.ok) {
             const error = await response.json();
-            showError(`❌ Token 交換失敗: ${error.error} - ${error.error_description}`);
+            showError(`❌ Token 交換失敗: ${error.error || error.message}`);
+            console.error('Token exchange error:', error);
             return null;
         }
 
         const data = await response.json();
+        console.log('[TOKEN EXCHANGE] ✅ 成功獲得 access token');
         return data.access_token;
     } catch (error) {
         showError(`❌ 網路錯誤: ${error.message}`);
+        console.error('Token exchange network error:', error);
         return null;
     }
 }
