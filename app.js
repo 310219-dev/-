@@ -288,6 +288,11 @@ async function getPlaylistTrackCount(accessToken, playlistId) {
             }
         );
 
+        if (response.status === 403) {
+            console.warn(`[WARNING] Forbidden access to ${playlistId} - this playlist may have restricted access`);
+            return -1; // -1 表示無權訪問
+        }
+
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
@@ -329,11 +334,17 @@ async function displayPlaylists(accessToken, playlists) {
         const totalTracks = await getPlaylistTrackCount(accessToken, playlist.id);
         
         // 更新顯示
-        item.textContent = `${playlist.name} — ${totalTracks} 首`;
-        
-        item.addEventListener('click', async () => {
-            await showPlaylistTracks(accessToken, playlist.id, playlist.name);
-        });
+        if (totalTracks === -1) {
+            // 無權訪問
+            item.textContent = `${playlist.name} — (無權訪問)`;
+            item.style.opacity = '0.6';
+            item.style.cursor = 'not-allowed';
+        } else {
+            item.textContent = `${playlist.name} — ${totalTracks} 首`;
+            item.addEventListener('click', async () => {
+                await showPlaylistTracks(accessToken, playlist.id, playlist.name);
+            });
+        }
     }
     
     currentView = 'playlists';
