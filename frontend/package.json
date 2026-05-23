@@ -1,0 +1,17 @@
+{
+  "name": "spotify-playlists-lister",
+  "version": "1.0.0",
+  "description": "Spotify playlists lister - pure frontend with OAuth PKCE",
+  "main": "public/index.html",
+  "scripts": {
+    "start": "serve public -l 3000",
+    "test": "jest tests/"
+  },
+  "keywords": ["spotify", "playlists", "oauth"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "serve": "^14.0.0"
+  }
+}
