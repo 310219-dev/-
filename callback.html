@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify 授權中...</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .spinner {
+            text-align: center;
+            color: white;
+        }
+        .spinner h2 {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="spinner">
+        <h2>正在完成授權...</h2>
+        <p>請稍候...</p>
+    </div>
+
+    <script>
+        // 處理來自 Spotify 的授權回應
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+        const error = params.get('error');
+        const state = params.get('state');
+
+        if (error) {
+            console.error('授權失敗:', error);
+            window.location.href = `index.html?error=${encodeURIComponent(error)}`;
+        } else if (code) {
+            // 驗證 state（防止 CSRF）
+            const savedState = sessionStorage.getItem('oauth_state');
+            if (state !== savedState) {
+                console.error('State 不匹配');
+                window.location.href = `index.html?error=state_mismatch`;
+            } else {
+                // 將 code 保存到 sessionStorage
+                sessionStorage.setItem('oauth_code', code);
+                // 重導回首頁進行 token 交換
+                window.location.href = 'index.html';
+            }
+        } else {
+            console.error('未收到授權 code');
+            window.location.href = `index.html?error=no_code`;
+        }
+    </script>
+</body>
+</html>
