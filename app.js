@@ -191,6 +191,7 @@ async function fetchAllPlaylists(accessToken) {
             }
 
             const data = await response.json();
+            console.log(`Playlists API Response (offset ${offset}):`, data);
             playlists.push(...data.items);
 
             offset += limit;
@@ -201,6 +202,7 @@ async function fetchAllPlaylists(accessToken) {
         }
     }
 
+    console.log('All playlists:', playlists);
     return playlists;
 }
 
@@ -292,6 +294,8 @@ async function fetchPlaylistDetails(accessToken, playlistId) {
         }
 
         const data = await response.json();
+        console.log(`Playlist Details (${playlistId}):`, data);
+        console.log(`  - tracks.total: ${data.tracks?.total}`);
         return data;
     } catch (error) {
         console.error(`取得歌單詳細信息失敗 (${playlistId}):`, error);
