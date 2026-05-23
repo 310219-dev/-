@@ -330,6 +330,15 @@ async function displayPlaylists(accessToken, playlists) {
         const details = await fetchPlaylistDetails(accessToken, playlist.id);
         const totalTracks = (details && details.tracks && details.tracks.total) ? details.tracks.total : 0;
         
+        // DEBUG: 在頁面顯示原始數據
+        console.log(`[DEBUG] ${playlist.name}:`, {
+            playlistId: playlist.id,
+            rawPlaylistData: playlist,
+            detailsResponse: details,
+            tracksTotal: totalTracks,
+            tracksFull: details?.tracks
+        });
+        
         // 更新顯示
         item.textContent = `${playlist.name} — ${totalTracks} 首`;
         
