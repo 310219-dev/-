@@ -79,44 +79,57 @@
 
         #playlistList {
             background: #f7f7f7;
-            padding: 20px;
+            padding: 0;
             border-radius: 8px;
-            font-family: 'Monaco', 'Courier New', monospace;
             font-size: 14px;
-            line-height: 1.6;
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+        }
+
+        .playlist-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
             color: #333;
-            white-space: pre-wrap;
-            word-break: break-word;
-        }
-
-        .loading {
-            text-align: center;
-            color: #999;
-            font-style: italic;
-        }
-
-        .error {
-            background: #ffebee;
-            color: #c62828;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-            border-left: 4px solid #c62828;
-        }
-
-        .logoutBtn {
-            margin-top: 20px;
-            padding: 8px 16px;
-            background: #eee;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 12px;
             cursor: pointer;
             transition: background 0.2s;
         }
 
-        .logoutBtn:hover {
-            background: #ddd;
+        .playlist-item:hover {
+            background: #e8f5e9;
+        }
+
+        .playlist-item:last-child {
+            border-bottom: none;
+        }
+
+        .playlist-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .playlist-header h2 {
+            color: #333;
+            font-size: 18px;
+            margin: 0;
+        }
+
+        #logoutBtn {
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        #logoutBtn:hover {
+            background: #e0e0e0;
         }
     </style>
 </head>
@@ -131,8 +144,11 @@
             <div class="user-info">
                 <span>👤 </span><span id="userDisplay"></span>
             </div>
-            <pre id="playlistList" class="loading">載入中...</pre>
-            <button class="logoutBtn" onclick="logout()">登出</button>
+            <div class="playlist-header">
+                <h2>您的歌單</h2>
+                <button id="logoutBtn" onclick="logout()">登出</button>
+            </div>
+            <div id="playlistList"></div>
         </div>
 
         <div id="errorContainer"></div>

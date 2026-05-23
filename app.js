@@ -204,6 +204,14 @@ async function fetchAllPlaylists(accessToken) {
     return playlists;
 }
 
+// ============ STATE MANAGEMENT ============
+
+let currentAccessToken = null;
+let currentPlaylists = [];
+let currentView = 'playlists'; // 'playlists' or 'tracks'
+let currentPlaylistId = null;
+let currentPlaylistName = '';
+
 // ============ UI HELPERS ============
 
 /**
@@ -216,11 +224,94 @@ function showError(message) {
 }
 
 /**
- * 渲染歌單清單為文字
+ * 顯示歌單清單（可點擊）
+ */
+async function displayPlaylists(accessToken, playlists) {
+    const playlistList = document.getElementById('playlistList');
+    const playlistHeader = document.querySelector('.playlist-header h2');
+    
+    playlistHeader.textContent = '您的歌單';
+    playlistList.innerHTML = '';
+    
+    if (playlists.length === 0) {
+        playlistList.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">尚無歌單</div>';
+        return;
+    }
+    
+    playlists.forEach((playlist) => {
+        const totalTracks = (playlist.tracks && playlist.tracks.total) ? playlist.tracks.total : 0;
+        const item = document.createElement('div');
+        item.className = 'playlist-item';
+        item.textContent = `${playlist.name} — ${totalTracks} 首`;
+        item.style.cursor = 'pointer';
+        
+        item.addEventListener('click', async () => {
+            await showPlaylistTracks(accessToken, playlist.id, playlist.name);
+        });
+        
+        playlistList.appendChild(item);
+    });
+    
+    currentView = 'playlists';
+}
+
+/**
+ * 顯示歌單的曲目清單
+ */
+async function showPlaylistTracks(accessToken, playlistId, playlistName) {
+    const playlistList = document.getElementById('playlistList');
+    const playlistHeader = document.querySelector('.playlist-header h2');
+    
+    // 顯示載入狀態
+    playlistList.innerHTML = '<div style="padding: 20px; text-align: center;">載入曲目中...</div>';
+    playlistHeader.textContent = `${playlistName}`;
+    
+    try {
+        const tracks = await fetchPlaylistTracks(accessToken, playlistId);
+        
+        playlistList.innerHTML = '';
+        
+        if (tracks.length === 0) {
+            playlistList.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">此歌單無曲目</div>';
+        } else {
+            tracks.forEach((item) => {
+                const track = item.track;
+                if (track) {
+                    const artists = track.artists.map(a => a.name).join(', ');
+                    const trackItem = document.createElement('div');
+                    trackItem.className = 'playlist-item';
+                    trackItem.textContent = `${track.name} — ${artists}`;
+                    playlistList.appendChild(trackItem);
+                }
+            });
+        }
+        
+        // 顯示「返回」按鈕
+        const returnBtn = document.createElement('div');
+        returnBtn.style.padding = '15px 20px';
+        returnBtn.style.textAlign = 'center';
+        returnBtn.style.borderTop = '1px solid #f0f0f0';
+        returnBtn.innerHTML = '<button id="returnBtn" style="padding: 8px 20px; background: #f0f0f0; border: 1px solid #ccc; border-radius: 20px; cursor: pointer;">← 返回歌單列表</button>';
+        playlistList.appendChild(returnBtn);
+        
+        document.getElementById('returnBtn').addEventListener('click', async () => {
+            await displayPlaylists(accessToken, currentPlaylists);
+        });
+        
+        currentView = 'tracks';
+        currentPlaylistId = playlistId;
+        currentPlaylistName = playlistName;
+        
+    } catch (error) {
+        showError(`❌ 載入曲目失敗: ${error.message}`);
+    }
+}
+
+/**
+ * 渲染歌單清單為文字（備用）
  */
 function renderPlaylists(playlists) {
     const lines = playlists.map((pl) => {
-        // 處理 tracks 可能不存在或結構不同的情況
         const totalTracks = (pl.tracks && pl.tracks.total) ? pl.tracks.total : (pl.total || 0);
         return `${pl.name} — ${totalTracks} 首`;
     });
@@ -277,6 +368,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 如果有 token，載入歌單
     if (accessToken) {
+        currentAccessToken = accessToken;
         playlistContainer.style.display = 'block';
         playlistList.textContent = '載入中...';
 
@@ -288,9 +380,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             // 取得所有歌單
             playlistList.textContent = '載入歌單中...';
             const playlists = await fetchAllPlaylists(accessToken);
+            currentPlaylists = playlists;
 
-            // 渲染歌單
-            playlistList.textContent = renderPlaylists(playlists);
+            // 顯示交互式歌單列表
+            await displayPlaylists(accessToken, playlists);
         } catch (error) {
             if (error.message.includes('Unauthorized')) {
                 playlistContainer.style.display = 'none';
