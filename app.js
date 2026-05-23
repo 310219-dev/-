@@ -16,7 +16,7 @@ const REDIRECT_URI = 'https://310219-dev.github.io/-/callback.html';
 // 測試 Token（用於快速測試，不經過 OAuth）
 // 來自 Spotify 官方代碼示例
 const TEST_TOKEN = 'BQC3p-feCen7Pi51h__0EIB1a1A0RjPIsM02QLXLHbvFX7AuGemnsZGVDwoM-me3Y2xqhY7Xe6N2ehSglK_9-MxiNZHHuZVwS2KS1F5GTwbbf3BvkIBXSK1utNh1HVnBgd72dOTMTSG8f1tnglAI7qv3YZBJ68RnWpEuUzqPVoWm9CYn-z5q3vW5-_5X9tANfyWhbPC98gSi-CdS11ZKHJJoHcIBnZ8wHehwBMPNF2cSsA7RlQbgpAT60zCmXzO5u7i87DVY6ma2QwGVBLi9_KF6giUG5HSpDkIVWIvNZykFdWk3OfnJk55jl-P6SHObimTFLYzT_w';
-const USE_TEST_TOKEN = false; // 設為 true 來測試官方 token
+const USE_TEST_TOKEN = true; // 設為 true 來測試官方 token
 
 // Spotify OAuth endpoints
 const SPOTIFY_AUTH_ENDPOINT = 'https://accounts.spotify.com/authorize';
