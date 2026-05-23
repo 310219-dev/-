@@ -274,13 +274,22 @@ function showError(message) {
 }
 
 /**
- * 取得歌單的曲目總數（透過調用 tracks 端點）
+ * 取得歌單的曲目總數（使用 /me/playlists 返回的信息）
  */
-async function getPlaylistTrackCount(accessToken, playlistId) {
+async function getPlaylistTrackCount(accessToken, playlist) {
     try {
-        // 只請求第一頁，limit=1，只是為了取得 total 字段
+        // 直接從 playlist 對象中取 tracks.total
+        const total = playlist.tracks?.total;
+        
+        if (total !== undefined && total !== null) {
+            console.log(`[TRACK COUNT] ${playlist.name}: ${total} tracks (from /me/playlists)`);
+            return total;
+        }
+        
+        // 如果沒有，才嘗試調用 /playlists/{id}/tracks
+        console.log(`[FALLBACK] Fetching tracks for ${playlist.id}...`);
         const response = await fetch(
-            `${SPOTIFY_API_BASE}/playlists/${playlistId}/tracks?limit=1`,
+            `${SPOTIFY_API_BASE}/playlists/${playlist.id}/tracks?limit=1`,
             {
                 headers: {
                     'Authorization': `Bearer ${accessToken}`,
@@ -289,7 +298,7 @@ async function getPlaylistTrackCount(accessToken, playlistId) {
         );
 
         if (response.status === 403) {
-            console.warn(`[WARNING] Forbidden access to ${playlistId} - this playlist may have restricted access`);
+            console.warn(`[WARNING] Forbidden access to ${playlist.id} - this playlist may have restricted access`);
             return -1; // -1 表示無權訪問
         }
 
@@ -298,11 +307,11 @@ async function getPlaylistTrackCount(accessToken, playlistId) {
         }
 
         const data = await response.json();
-        const total = data.total || 0;
-        console.log(`[TRACK COUNT] ${playlistId}: ${total} tracks`);
-        return total;
+        const trackTotal = data.total || 0;
+        console.log(`[TRACK COUNT] ${playlist.id}: ${trackTotal} tracks (from /playlists/{id}/tracks)`);
+        return trackTotal;
     } catch (error) {
-        console.error(`取得曲目數失敗 (${playlistId}):`, error);
+        console.error(`取得曲目數失敗 (${playlist.id}):`, error);
         return 0;
     }
 }
@@ -331,7 +340,7 @@ async function displayPlaylists(accessToken, playlists) {
         playlistList.appendChild(item);
         
         // 非同步取得曲目總數
-        const totalTracks = await getPlaylistTrackCount(accessToken, playlist.id);
+        const totalTracks = await getPlaylistTrackCount(accessToken, playlist);
         
         // 更新顯示
         if (totalTracks === -1) {
