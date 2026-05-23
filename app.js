@@ -84,7 +84,7 @@ async function startOAuthFlow() {
         client_id: CLIENT_ID,
         response_type: 'code',
         redirect_uri: REDIRECT_URI,
-        scope: 'playlist-read-private playlist-read-collaborative user-read-private',
+        scope: 'playlist-read-private playlist-read-collaborative user-read-private user-read-email',
         code_challenge_method: 'S256',
         code_challenge: codeChallenge,
         state: state,
