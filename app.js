@@ -15,7 +15,7 @@ const REDIRECT_URI = 'https://310219-dev.github.io/-/callback.html';
 
 // 測試 Token（用於快速測試，不經過 OAuth）
 // 來自 Spotify 官方代碼示例
-const TEST_TOKEN = 'BQBpjx7dXHdYo8c3K-nTiqbY_3RsOkf-8aZR7h9SOUE6afANV5Fm3n29GaLy0a1g1pYpvtUz91fzB1Xx-8ZvAKp-xh8MpHJG4KLLULgPBfXg0cncsXNg3oxIjflnpVD8RRXS7koV3evOB0GRk444irHWT2SebLsxR9B2XkDCL0WEDyGcTgQKmD0_oWxCgG-LmmisTjv5MQykfSOTn8uOJ2behQqvD2Qca_AOg6PBjetBTH4SRQO1ifd5OAn6nK5zKq73fKpsCEUaJLiRlBJOUq-eiTsUF2xXdmqYUHFJ3jVJd6WcE8ZE18zyfAgZVbTRw9Bp_EbmyA';
+const TEST_TOKEN = 'BQDnKy0LXoHlJuYL2faIrra8xSlNxYAyYrNAB1unayLAtWFMaDUgbDogyUQP-MFiF1OPd83K8WZF2oeZnS45pMNqW73U1pZSF7lnMLhUQMthfefRobXWDOylEn03Drj0Bao43Hmx1e6wcl3PQjvI5A2v_vhDTTaR9VHXW-9zV3kUuGY8O4tL7yXk0YMTxfNEuN8ehYqcdHXFSWeLVPfeIT0s7jxn3KjkouGfwi3OtuBg-WtByvdhHsKyaCFswkoxYzc_MnDVSfCjB0ptPMUSaaxNC60oS1jY6UOA1_ty8T5-_QK0_HT9CQ7Jr3uWxQ-ucZ0kisrcow';
 const USE_TEST_TOKEN = true; // 設為 true 來測試官方 token
 
 // Spotify OAuth endpoints
