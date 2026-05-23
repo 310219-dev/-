@@ -329,6 +329,7 @@ function logout() {
 }
 
 // ============ MAIN INITIALIZATION ============
+// Version: 2.0 - Interactive Playlist Explorer
 
 document.addEventListener('DOMContentLoaded', async () => {
     const loginBtn = document.getElementById('loginBtn');
