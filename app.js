@@ -270,6 +270,32 @@ function showError(message) {
 }
 
 /**
+ * 取得單一歌單的詳細信息（包含曲目數）
+ */
+async function fetchPlaylistDetails(accessToken, playlistId) {
+    try {
+        const response = await fetch(
+            `${SPOTIFY_API_BASE}/playlists/${playlistId}`,
+            {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                },
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error(`取得歌單詳細信息失敗 (${playlistId}):`, error);
+        return null;
+    }
+}
+
+/**
  * 顯示歌單清單（可點擊）
  */
 async function displayPlaylists(accessToken, playlists) {
@@ -284,19 +310,25 @@ async function displayPlaylists(accessToken, playlists) {
         return;
     }
     
-    playlists.forEach((playlist) => {
-        const totalTracks = (playlist.tracks && playlist.tracks.total) ? playlist.tracks.total : 0;
+    for (const playlist of playlists) {
+        // 先顯示歌單名稱
         const item = document.createElement('div');
         item.className = 'playlist-item';
-        item.textContent = `${playlist.name} — ${totalTracks} 首`;
         item.style.cursor = 'pointer';
+        item.textContent = `${playlist.name} — 載入中...`;
+        playlistList.appendChild(item);
+        
+        // 非同步取得詳細信息
+        const details = await fetchPlaylistDetails(accessToken, playlist.id);
+        const totalTracks = (details && details.tracks && details.tracks.total) ? details.tracks.total : 0;
+        
+        // 更新顯示
+        item.textContent = `${playlist.name} — ${totalTracks} 首`;
         
         item.addEventListener('click', async () => {
             await showPlaylistTracks(accessToken, playlist.id, playlist.name);
         });
-        
-        playlistList.appendChild(item);
-    });
+    }
     
     currentView = 'playlists';
 }
