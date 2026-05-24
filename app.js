@@ -334,7 +334,8 @@ async function fetchPlaylistTracks(accessToken, playlistId, isRetry = false) {
             }
 
             if (response.status === 403) {
-            throw new Error('此歌單無法訪問 (可能是協作歌單或隱私限制)');
+                throw new Error('此歌單無法訪問 (可能是協作歌單或隱私限制)');
+            }
 
             if (response.status === 429) {
                 throw new Error('Too Many Requests: API 限流，請稍後重試');
