@@ -393,56 +393,21 @@ async function getPlaylistTrackCount(accessToken, playlist, isRetry = false) {
         // 直接從 playlist 對象中取 tracks.total
         const total = playlist.tracks?.total;
         
-        console.log(`[DEBUG] ${playlist.name} - playlist.tracks:`, playlist.tracks);
+        console.log(`[TRACK COUNT] ${playlist.name}: ${total} tracks`);
         
+        // 只返回 tracks.total，不再嘗試調用 /playlists/{id}/tracks
+        // （會返回 403，且易觸發速率限制）
         if (total !== undefined && total !== null) {
-            console.log(`[TRACK COUNT] ${playlist.name}: ${total} tracks (from /me/playlists)`);
             return total;
         }
         
-        // 如果沒有，才嘗試調用 /playlists/{id}/tracks
-        console.log(`[FALLBACK] Fetching tracks for ${playlist.id}...`);
-        const response = await fetch(
-            `${SPOTIFY_API_BASE}/playlists/${playlist.id}/tracks?limit=1`,
-            {
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                },
-            }
-        );
-
-        // 【新增】當收到 401 且還沒有重試過時，嘗試刷新 token
-        if (response.status === 401 && !isRetry) {
-            console.log('[API] 收到 401 - 嘗試刷新 token...');
-            const newToken = await refreshAccessToken();
-            if (newToken) {
-                return getPlaylistTrackCount(newToken, playlist, true);  // 重試
-            }
-        }
-
-        if (response.status === 429) {
-            console.warn(`[RATE LIMIT] 429 - 稍後重試`);
-            await sleep(2000); // 等待 2 秒後重試
-            return getPlaylistTrackCount(accessToken, playlist, isRetry);
-        }
-
-        if (response.status === 403) {
-            console.warn(`[WARNING] Forbidden access to ${playlist.id} - this playlist may have restricted access`);
-            return -1; // -1 表示無權訪問
-        }
-
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
-
-        const data = await response.json();
-        const trackTotal = data.total || 0;
-        console.log(`[TRACK COUNT] ${playlist.id}: ${trackTotal} tracks (from /playlists/{id}/tracks)`);
-        return trackTotal;
+        // 如果 tracks.total 不存在，返回 0
+        return 0;
     } catch (error) {
         console.error(`取得曲目數失敗 (${playlist.id}):`, error);
         return 0;
     }
+}
 }
 
 /**
@@ -472,13 +437,9 @@ async function displayPlaylists(accessToken, playlists) {
         const totalTracks = await getPlaylistTrackCount(accessToken, playlist);
         
         // 更新顯示
-        if (totalTracks === -1) {
-            // 無權訪問 - 但仍允許點擊嘗試
-            item.textContent = `${playlist.name} — (?)`;
-            item.style.opacity = '0.8';
-        } else if (totalTracks === 0) {
-            // 可能是空歌單或錯誤
-            item.textContent = `${playlist.name} — (無曲目)`;
+        if (totalTracks === 0) {
+            // 可能是空歌單或無法讀取
+            item.textContent = `${playlist.name} — (無)`;
         } else {
             item.textContent = `${playlist.name} — ${totalTracks} 首`;
         }
@@ -487,9 +448,6 @@ async function displayPlaylists(accessToken, playlists) {
         item.addEventListener('click', async () => {
             await showPlaylistTracks(accessToken, playlist.id, playlist.name);
         });
-        
-        // 【新增】避免 API 速率限制 - 請求之間延遲 150ms
-        await sleep(150);
     }
     
     currentView = 'playlists';
