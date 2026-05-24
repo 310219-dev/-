@@ -31,6 +31,13 @@ const STORAGE_CODE_VERIFIER = 'oauth_code_verifier';
 // ============ PKCE HELPERS ============
 
 /**
+ * 延遲執行（毫秒）
+ */
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
  * 生成隨機字符串用於 PKCE code_verifier
  */
 function generateRandomString(length) {
@@ -411,6 +418,12 @@ async function getPlaylistTrackCount(accessToken, playlist, isRetry = false) {
             }
         }
 
+        if (response.status === 429) {
+            console.warn(`[RATE LIMIT] 429 - 稍後重試`);
+            await sleep(2000); // 等待 2 秒後重試
+            return getPlaylistTrackCount(accessToken, playlist, isRetry);
+        }
+
         if (response.status === 403) {
             console.warn(`[WARNING] Forbidden access to ${playlist.id} - this playlist may have restricted access`);
             return -1; // -1 表示無權訪問
@@ -472,6 +485,9 @@ async function displayPlaylists(accessToken, playlists) {
         item.addEventListener('click', async () => {
             await showPlaylistTracks(accessToken, playlist.id, playlist.name);
         });
+        
+        // 【新增】避免 API 速率限制 - 請求之間延遲 150ms
+        await sleep(150);
     }
     
     currentView = 'playlists';
