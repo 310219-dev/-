@@ -252,8 +252,6 @@ async function makeApiCall(endpoint, accessToken, isRetry = false) {
 async function fetchUserProfile(accessToken) {
     return makeApiCall(`${SPOTIFY_API_BASE}/me`, accessToken);
 }
-    }
-}
 
 /**
  * 取得使用者的所有歌單（分頁處理）
