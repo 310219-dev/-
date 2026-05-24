@@ -393,6 +393,8 @@ async function getPlaylistTrackCount(accessToken, playlist, isRetry = false) {
         // 直接從 playlist 對象中取 tracks.total
         const total = playlist.tracks?.total;
         
+        console.log(`[DEBUG] ${playlist.name} - playlist.tracks:`, playlist.tracks);
+        
         if (total !== undefined && total !== null) {
             console.log(`[TRACK COUNT] ${playlist.name}: ${total} tracks (from /me/playlists)`);
             return total;
