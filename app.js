@@ -24,6 +24,7 @@ const SPOTIFY_API_BASE = 'https://api.spotify.com/v1';
 
 // Storage keys
 const STORAGE_ACCESS_TOKEN = 'spotify_access_token';
+const STORAGE_REFRESH_TOKEN = 'spotify_refresh_token';  // 【新增】用於自動刷新 token
 const STORAGE_STATE = 'oauth_state';
 const STORAGE_CODE_VERIFIER = 'oauth_code_verifier';
 
@@ -138,6 +139,13 @@ async function exchangeCodeForToken(code) {
 
         const data = await response.json();
         console.log('[TOKEN EXCHANGE] ✅ 成功獲得 access token');
+        
+        // 【新增】保存 refresh_token 以供後續使用
+        if (data.refresh_token) {
+            sessionStorage.setItem(STORAGE_REFRESH_TOKEN, data.refresh_token);
+            console.log('[TOKEN EXCHANGE] 已保存 refresh_token');
+        }
+        
         return data.access_token;
     } catch (error) {
         showError(`❌ 網路錯誤: ${error.message}`);
@@ -146,18 +154,86 @@ async function exchangeCodeForToken(code) {
     }
 }
 
+// ============ TOKEN REFRESH FUNCTION ============
+
+/**
+ * 使用 refresh_token 刷新 access_token
+ * 當 access_token 過期時調用此函數
+ */
+async function refreshAccessToken() {
+    const refreshToken = sessionStorage.getItem(STORAGE_REFRESH_TOKEN);
+    
+    if (!refreshToken) {
+        console.error('❌ 找不到 refresh_token，無法刷新');
+        return null;
+    }
+    
+    try {
+        console.log('[TOKEN REFRESH] 使用 refresh_token 刷新 access_token...');
+        
+        // 調用後端 refresh 端點
+        const vercelApiUrl = 'https://kappa-five-49.vercel.app/api/refresh';
+        
+        const response = await fetch(vercelApiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                refreshToken: refreshToken,
+            }),
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            console.error('[TOKEN REFRESH] ❌ 刷新失敗:', error);
+            // 如果 refresh_token 也過期了，需要重新登入
+            sessionStorage.removeItem(STORAGE_ACCESS_TOKEN);
+            sessionStorage.removeItem(STORAGE_REFRESH_TOKEN);
+            return null;
+        }
+        
+        const data = await response.json();
+        const newAccessToken = data.access_token;
+        
+        // 保存新的 access_token
+        sessionStorage.setItem(STORAGE_ACCESS_TOKEN, newAccessToken);
+        console.log('[TOKEN REFRESH] ✅ 成功刷新 access_token');
+        
+        // 如果返回了新的 refresh_token，也更新它
+        if (data.refresh_token) {
+            sessionStorage.setItem(STORAGE_REFRESH_TOKEN, data.refresh_token);
+        }
+        
+        return newAccessToken;
+    } catch (error) {
+        console.error('[TOKEN REFRESH] 網路錯誤:', error);
+        return null;
+    }
+}
+
 // ============ SPOTIFY API CALLS ============
 
 /**
- * 取得使用者信息
+ * 通用 API 調用函數 - 自動處理 401 重試
  */
-async function fetchUserProfile(accessToken) {
+async function makeApiCall(endpoint, accessToken, isRetry = false) {
     try {
-        const response = await fetch(`${SPOTIFY_API_BASE}/me`, {
+        const response = await fetch(endpoint, {
             headers: {
                 'Authorization': `Bearer ${accessToken}`,
             },
         });
+
+        // 【新增】當收到 401 且還沒有重試過時，嘗試刷新 token
+        if (response.status === 401 && !isRetry) {
+            console.log('[API] 收到 401 - 嘗試刷新 token...');
+            const newToken = await refreshAccessToken();
+            if (newToken) {
+                // 遞迴調用自己，使用新 token 進行重試
+                return makeApiCall(endpoint, newToken, true);
+            }
+        }
 
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
@@ -165,15 +241,24 @@ async function fetchUserProfile(accessToken) {
 
         return await response.json();
     } catch (error) {
-        console.error('取得使用者信息失敗:', error);
+        console.error(`API 調用失敗 (${endpoint}):`, error);
         throw error;
+    }
+}
+
+/**
+ * 取得使用者信息
+ */
+async function fetchUserProfile(accessToken) {
+    return makeApiCall(`${SPOTIFY_API_BASE}/me`, accessToken);
+}
     }
 }
 
 /**
  * 取得使用者的所有歌單（分頁處理）
  */
-async function fetchAllPlaylists(accessToken) {
+async function fetchAllPlaylists(accessToken, isRetry = false) {
     const playlists = [];
     let offset = 0;
     const limit = 50;
@@ -190,8 +275,13 @@ async function fetchAllPlaylists(accessToken) {
                 }
             );
 
-            if (response.status === 401) {
-                throw new Error('Unauthorized: Token 已過期或無效');
+            // 【新增】當收到 401 且還沒有重試過時，嘗試刷新 token
+            if (response.status === 401 && !isRetry) {
+                console.log('[API] 收到 401 - 嘗試刷新 token...');
+                const newToken = await refreshAccessToken();
+                if (newToken) {
+                    return fetchAllPlaylists(newToken, true);  // 重試
+                }
             }
 
             if (response.status === 429) {
@@ -219,7 +309,7 @@ async function fetchAllPlaylists(accessToken) {
 /**
  * 取得歌單的所有曲目（分頁處理）
  */
-async function fetchPlaylistTracks(accessToken, playlistId) {
+async function fetchPlaylistTracks(accessToken, playlistId, isRetry = false) {
     const tracks = [];
     let offset = 0;
     const limit = 50;
@@ -236,8 +326,13 @@ async function fetchPlaylistTracks(accessToken, playlistId) {
                 }
             );
 
-            if (response.status === 401) {
-                throw new Error('Unauthorized: Token 已過期或無效');
+            // 【新增】當收到 401 且還沒有重試過時，嘗試刷新 token
+            if (response.status === 401 && !isRetry) {
+                console.log('[API] 收到 401 - 嘗試刷新 token...');
+                const newToken = await refreshAccessToken();
+                if (newToken) {
+                    return fetchPlaylistTracks(newToken, playlistId, true);  // 重試
+                }
             }
 
             if (response.status === 403) {
@@ -288,7 +383,7 @@ function showError(message) {
 /**
  * 取得歌單的曲目總數（使用 /me/playlists 返回的信息）
  */
-async function getPlaylistTrackCount(accessToken, playlist) {
+async function getPlaylistTrackCount(accessToken, playlist, isRetry = false) {
     try {
         // 直接從 playlist 對象中取 tracks.total
         const total = playlist.tracks?.total;
@@ -308,6 +403,15 @@ async function getPlaylistTrackCount(accessToken, playlist) {
                 },
             }
         );
+
+        // 【新增】當收到 401 且還沒有重試過時，嘗試刷新 token
+        if (response.status === 401 && !isRetry) {
+            console.log('[API] 收到 401 - 嘗試刷新 token...');
+            const newToken = await refreshAccessToken();
+            if (newToken) {
+                return getPlaylistTrackCount(newToken, playlist, true);  // 重試
+            }
+        }
 
         if (response.status === 403) {
             console.warn(`[WARNING] Forbidden access to ${playlist.id} - this playlist may have restricted access`);
@@ -449,6 +553,7 @@ function renderPlaylists(playlists) {
  */
 function logout() {
     sessionStorage.removeItem(STORAGE_ACCESS_TOKEN);
+    sessionStorage.removeItem(STORAGE_REFRESH_TOKEN);  // 【新增】清除 refresh_token
     sessionStorage.removeItem(STORAGE_CODE_VERIFIER);
     sessionStorage.removeItem(STORAGE_STATE);
     window.location.href = 'index.html';
@@ -511,6 +616,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 檢查是否有已保存的 access token
     let accessToken = sessionStorage.getItem(STORAGE_ACCESS_TOKEN);
+
+    // 【新增】如果沒有 access token 但有 refresh_token，嘗試用 refresh_token 恢復登入
+    if (!accessToken) {
+        const refreshToken = sessionStorage.getItem(STORAGE_REFRESH_TOKEN);
+        if (refreshToken) {
+            console.log('[RESTORE] 檢測到 refresh_token，嘗試恢復登入...');
+            playlistList.textContent = '正在恢復登入...';
+            playlistContainer.style.display = 'block';
+            
+            accessToken = await refreshAccessToken();
+            if (!accessToken) {
+                console.log('[RESTORE] ❌ 恢復失敗，需要重新登入');
+                sessionStorage.removeItem(STORAGE_REFRESH_TOKEN);
+                playlistContainer.style.display = 'none';
+                return;
+            }
+            console.log('[RESTORE] ✅ 成功恢復登入！');
+        }
+    }
 
     // 如果沒有 token，檢查是否有 code 可交換
     if (!accessToken) {
