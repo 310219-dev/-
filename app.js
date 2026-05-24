@@ -408,7 +408,6 @@ async function getPlaylistTrackCount(accessToken, playlist, isRetry = false) {
         return 0;
     }
 }
-}
 
 /**
  * 顯示歌單清單（可點擊）
