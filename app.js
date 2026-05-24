@@ -334,8 +334,7 @@ async function fetchPlaylistTracks(accessToken, playlistId, isRetry = false) {
             }
 
             if (response.status === 403) {
-                throw new Error('Forbidden: 無權限訪問此歌單（可能是協作歌單或受限歌單）');
-            }
+            throw new Error('此歌單無法訪問 (可能是協作歌單或隱私限制)');
 
             if (response.status === 429) {
                 throw new Error('Too Many Requests: API 限流，請稍後重試');
@@ -458,16 +457,20 @@ async function displayPlaylists(accessToken, playlists) {
         
         // 更新顯示
         if (totalTracks === -1) {
-            // 無權訪問
-            item.textContent = `${playlist.name} — (無權訪問)`;
-            item.style.opacity = '0.6';
-            item.style.cursor = 'not-allowed';
+            // 無權訪問 - 但仍允許點擊嘗試
+            item.textContent = `${playlist.name} — (?)`;
+            item.style.opacity = '0.8';
+        } else if (totalTracks === 0) {
+            // 可能是空歌單或錯誤
+            item.textContent = `${playlist.name} — (無曲目)`;
         } else {
             item.textContent = `${playlist.name} — ${totalTracks} 首`;
-            item.addEventListener('click', async () => {
-                await showPlaylistTracks(accessToken, playlist.id, playlist.name);
-            });
         }
+        
+        // 所有播放列表都可以點擊進去查看
+        item.addEventListener('click', async () => {
+            await showPlaylistTracks(accessToken, playlist.id, playlist.name);
+        });
     }
     
     currentView = 'playlists';
