@@ -112,9 +112,12 @@ async function exchangeCodeForToken(code) {
     try {
         // 【新】透過 Vercel 後端函數安全地交換 Token
         // 這樣 Client Secret 永遠不會暴露給前端
-        console.log('[TOKEN EXCHANGE] 調用後端 API 交換 token...');
+        console.log('[TOKEN EXCHANGE] 調用 Vercel 後端 API 交換 token...');
         
-        const response = await fetch('/api/token', {
+        // 使用 Vercel 部署的 API 端點
+        const vercelApiUrl = 'https://kappa-five-49.vercel.app/api/token';
+        
+        const response = await fetch(vercelApiUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
