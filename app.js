@@ -13,9 +13,9 @@ const CLIENT_ID = '42b59981c4ac4e4d9fc0091d9cb1926b';
 // 👇 請設定您的 Redirect URI（必須與 Spotify App 設定相同）
 const REDIRECT_URI = 'https://310219-dev.github.io/-/callback.html';
 
-// 測試 Token（已棄用 - 使用真正的 OAuth + 後端 Token 交換）
-// const TEST_TOKEN = '...';
-const USE_TEST_TOKEN = false; // 現在使用正確的 OAuth 流程 + Vercel 後端
+// 測試 Token（用於診斷 Vercel 後端是否正常運作）
+const TEST_TOKEN = 'BQDG_dgW3UNQiVwfXGneWzXBbHIBs6eCrgRQizGfujDrplxSlE_O_fMoRTCOEey4ESsO34JlrELpXSDaSr5zDXMyarGXiBBLtb_b-suxTTe4i7DeMpWOl3V1wZlYks22RVb7FBXiZ5DxLYGf4t5Anv6alEYWQOWCOik4nAheZ2FJQBDRFC1bLltG1_BqT-BmOmXIAu0CTfR3F9smB-rwuuez52nLOKwcXFjyFsGozPKYy9WAGihMFlwLYIxSqqgbtM9YJsLWCnYutm5wFIOUTk1aGtyz7XzyLcXkRBsyFuE8nzmm8AyawHKyhWyehigGw8E8nGXSOg';
+const USE_TEST_TOKEN = true; // 測試模式：使用官方 token 驗證系統是否正常
 
 // Spotify OAuth endpoints
 const SPOTIFY_AUTH_ENDPOINT = 'https://accounts.spotify.com/authorize';
