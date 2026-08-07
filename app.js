@@ -14,7 +14,7 @@ const CLIENT_ID = '42b59981c4ac4e4d9fc0091d9cb1926b';
 const REDIRECT_URI = 'https://310219-dev.github.io/-/callback.html';
 
 // 測試 Token（用於診斷 Vercel 後端是否正常運作）
-const TEST_TOKEN = 'BQDG_dgW3UNQiVwfXGneWzXBbHIBs6eCrgRQizGfujDrplxSlE_O_fMoRTCOEey4ESsO34JlrELpXSDaSr5zDXMyarGXiBBLtb_b-suxTTe4i7DeMpWOl3V1wZlYks22RVb7FBXiZ5DxLYGf4t5Anv6alEYWQOWCOik4nAheZ2FJQBDRFC1bLltG1_BqT-BmOmXIAu0CTfR3F9smB-rwuuez52nLOKwcXFjyFsGozPKYy9WAGihMFlwLYIxSqqgbtM9YJsLWCnYutm5wFIOUTk1aGtyz7XzyLcXkRBsyFuE8nzmm8AyawHKyhWyehigGw8E8nGXSOg';
+const TEST_TOKEN = 'BQAZnGs5mIo2HM3q9lNQ-KGbeKlHE-zBoTE3UUg4_NedN7uaevDOzzmk3pJRZlNYpSjOpHNbtuURFuuQX15B1TQEujrhkPabwWiGTvXX3CcRQ1iYcvFf9ZujL677NV_Dl4IV76iVZUxFEwbJ9MVxjKugS4NE9PuZPwuY8MxWSUb8XVKu5LoM6kAc3jO1B1o4rdohdf37sqgWz1hr8-sQ0rG3OEKJAj-IeLWziO2mEsQU04nZ4R9Gl48jMCzj4j2lteCkScH_liwAV76TXItZgsGRxPFbx8e48cnRnF6zB6n4yMQUWbrBLXKKm9h-JvpuVEoncj0';
 const USE_TEST_TOKEN = true; // 測試模式：使用官方 token 驗證系統是否正常
 
 // Spotify OAuth endpoints
